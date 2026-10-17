@@ -242,28 +242,31 @@ client.on("messageCreate", async (message) => {
         const rewardChannel = message.guild.channels.cache.get(REWARD_CHANNEL);
         if (rewardChannel) {
             await rewardChannel.send({
-                embeds: [{
-                    title: "🌈🐯 CADRE NÉON – RÉCOMPENSE DÉBLOQUÉE 🌈",
-                    description: `
-╔══════════════════════════════╗
+    embeds: [{
+        title: "🎖 RÉCOMPENSE DÉBLOQUÉE",
+        description: `
+💜══════════════════════════════════════════════════════💙
 **${member}** vient de passer au **niveau ${niveau}** !
 
 🎖 **Rôle obtenu :** ${role.name}  
-🔓 **Emoji débloqué :** :${emojiName}:
+🔓 **Emoji débloqué :** <:${emoji.name}:${emoji.id}>  
 
 🔥 **Puissance du Tigre :** +${niveau * 2}  
 ⚡ **Énergie Cosmique :** Activée  
 🌈 **Cadre Néon Multicolore :** ON
 
 Continue ta progression, guerrier du territoire tigre.
-╚══════════════════════════════╝
-                    `,
-                    color: 0xFF00FF, // Magenta néon multicolore
-                    thumbnail: {
-                        url: emoji ? emoji.url : null
-                    }
-                }]
-            });
+💚══════════════════════════════════════════════════════💛
+        `,
+        color: 0xFF00FF,
+        thumbnail: {
+            url: emoji ? emoji.url : null
+        },
+        footer: {
+            text: "✨ TigreBot – Énergie cosmique en expansion ✨"
+        }
+    }]
+});
         }
     } catch (err) {
         console.error("Erreur envoi récompense :", err);
