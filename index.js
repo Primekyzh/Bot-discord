@@ -16,6 +16,10 @@ client.once('ready', () => {
 const TRAP_CHANNEL_ID = "1553398885181956177";
 const ALLOWED_LINK = "https://cdricpa.fr/";
 
+// =========================
+// FILTRE LIENS + SALON PIÈGE
+// =========================
+
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
@@ -69,7 +73,10 @@ client.on('messageCreate', async (message) => {
     }
 });
 
-// MESSAGE DE BIENVENUE
+// =========================
+// MESSAGE DE BIENVENUE TIGRE CDRICPA
+// =========================
+
 client.on('guildMemberAdd', async (member) => {
     try {
         const channel = member.guild.channels.cache.get("1553398596550918243");
@@ -77,25 +84,87 @@ client.on('guildMemberAdd', async (member) => {
 
         await channel.send({
             embeds: [{
-                title: "🐯 Bienvenue chez les Tigres !",
-                description: `<@${member.id}>    
-Tu viens d’arriver dans le territoire du tigre.  
-Ici, on protège les nôtres, on rugit ensemble,  
-et on chasse les intrus.  
-Prends place, guerrier.  
-Prends le temps de découvrir le Discord et de rejoindre la communauté !
+                title: "🐯🔥 BIENVENUE SUR LE TERRITOIRE DU TIGRE ! 🔥🐯",
+                description: `
+💜🧡 **TEAM CDRICPA** 🧡💜
 
-**Salons principaux :**
-• 📅 <#1553398597041787074>
-• 🤖 <#1553398597549293620>
-• 💬 <#1553398597549293619>
-• 📸 <#1553398597549293621>
-• 🔫 <#1553398597549293622>
-• 📺 <#1553398597549293625>
-• 🎧 <#1553398598039900272>
-• 🎥 <#1553398597549293623>`,
+🎉 Un nouveau guerrier vient de rejoindre la meute !
+
+👋 **Bienvenue à toi <@${member.id}> !**
+
+🐯 Tu viens de pénétrer sur le territoire du **TIGRE CDRICPA** !
+
+Ici, on protège les nôtres, on rugit ensemble et on ne laisse jamais un membre de la team derrière ! 💪🔥
+
+Que tu sois un joueur compétitif, un amateur de Warzone ou simplement là pour passer de bons moments,  
+tu fais désormais partie de la **famille CSFra** ! ❤️
+
+⚔️ Alors prends place, guerrier, et prépare-toi à rugir avec nous !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🧭 📍 **DÉCOUVRE TON NOUVEAU TERRITOIRE**
+
+📅・<#1553398597041787074>  
+➜ Retrouve les horaires des prochains lives de CDRICPA.
+
+🤖・<#1553398597549293620>  
+➜ Trouve des coéquipiers pour partir au combat sur Warzone !
+
+💬・<#1553398597549293619>  
+➜ Le cœur de la communauté ! Viens discuter, rigoler et faire connaissance.
+
+📸・<#1553398597549293621>  
+➜ Partage tes photos, tes créations et tes meilleurs moments.
+
+🔫・<#1553398597549293622>  
+➜ Partage tes meilleures classes et découvre celles des autres guerriers !
+
+📺・<#1553398597549293625>  
+➜ Retrouve les informations, nouveautés et leaks sur Call of Duty.
+
+🎧・<#1553398598039900272>  
+➜ Partage tes musiques préférées et découvre les sons de la team !
+
+🎥・<#1553398597549293623>  
+➜ Montre-nous tes plus beaux kills, tes actions incroyables et tes fails légendaires ! 😂
+
+━━━━━━━━━━━━━━━━━━━━
+
+📜 🛡️ **LES RÈGLES DU TERRITOIRE**
+
+🤝 RESPECT — Ici, tout le monde mérite sa place.  
+💜 ENTRAIDE — Un tigre ne laisse jamais tomber les siens.  
+😂 BONNE HUMEUR — Du fun, du chill et des fous rires !  
+🔥 SOLIDARITÉ — Ensemble, la Team CDRICPA est plus forte !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 🔥 **TA PREMIÈRE MISSION !**
+
+🐯 Présente-toi dans le salon général !
+
+💬 Dis-nous depuis combien de temps tu joues à Call of Duty  
+et quel est ton mode préféré : **BR ou Résurgence** 👀
+
+❤️ N'hésite pas à participer aux discussions et à rejoindre les autres membres !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🐯💜 **LE MOT DE CDRICPA**
+
+« Ici, on ne cherche pas à être les meilleurs individuellement.  
+On cherche à construire la meilleure communauté ensemble ! »
+
+🔥 **UN TIGRE EST FORT, MAIS UNE MEUTE DE TIGRES EST INARRÊTABLE !** 🐯
+
+🎥 TikTok : @cdricpa  
+👑 Communauté : TEAM CDRICPA
+
+🐯 **BIENVENUE DANS LA FAMILLE !** 💜🧡
+                `,
                 image: {
-                    url: "https://cdn.discordapp.com/attachments/1552945997209014363/1552950076429832293/ezgif-50878ceaaba0744c.gif"
+                    url: "https://cdn.discordapp.com/attachments/1307790538162044958/1561018821387620383/ChatGPT_Image_17_oct._2026_16_03_41.png"
                 },
                 color: 0xFF9900
             }]
