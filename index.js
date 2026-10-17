@@ -19,6 +19,7 @@ const ALLOWED_LINK = "https://cdricpa.fr/";
 client.on('messageCreate', async (message) => {
     if (message.author.bot) return;
 
+    // SALON PIÈGE
     if (message.channel.id === TRAP_CHANNEL_ID) {
         try {
             await message.guild.members.ban(message.author.id, {
@@ -37,6 +38,7 @@ client.on('messageCreate', async (message) => {
         return;
     }
 
+    // FILTRE LIENS
     const urlRegex = /(https?:\/\/[^\s]+)/gi;
 
     if (urlRegex.test(message.content)) {
@@ -67,6 +69,7 @@ client.on('messageCreate', async (message) => {
     }
 });
 
+// MESSAGE DE BIENVENUE
 client.on('guildMemberAdd', async (member) => {
     try {
         const channel = member.guild.channels.cache.get("1553398596550918243");
@@ -161,37 +164,15 @@ const rolesTigre = {
   50: "TIGRE ULTIME CDRICPA"
 };
 
-client.on("guildMemberUpdate", async (oldMember, newMember) => {
-    const newRole = newMember.roles.cache.find(r => !oldMember.roles.cache.has(r.id));
-    if (!newRole) return;
-
-    const roleNameClean = newRole.name.replace(/^[^\w]+/, "").trim();
-    const niveau = Object.keys(rolesTigre).find(key => rolesTigre[key] === roleNameClean);
-
-    if (!niveau) return;
-
-    const emojiName = `CDRICPA_Niveau_${String(niveau).padStart(2, '0')}`;
-    const emoji = newMember.guild.emojis.cache.find(e => e.name === emojiName);
-
-    if (!emoji) {
-        console.log(`Emoji introuvable : ${emojiName}`);
-        return;
-    }
-
-    try {
-        await emoji.roles.add(newRole.id);
-        console.log(`Emoji ${emojiName} débloqué pour le rôle ${newRole.name}`);
-    } catch (err) {
-        console.error("Erreur lors de l'ajout du rôle à l'emoji :", err);
-    }
-});
-
 // =========================
 // SYSTÈME DE RÉCOMPENSES VIA DRAFTBOT
 // =========================
 
 const LEVEL_UP_CHANNEL = "1553416417376997417";
 const REWARD_CHANNEL = "1553429611197632522";
+const SPECIAL_ACTIVE_CHANNEL = "1561093302793805904"; // texte lvl 10+
+const VIP_VOICE_CHANNEL = "1561093892806541342";     // vocal lvl 30+
+const PANTHEON_CHANNEL = "1561094039359594616";      // panthéon
 
 client.on("messageCreate", async (message) => {
 
@@ -217,12 +198,24 @@ client.on("messageCreate", async (message) => {
 
     if (!role) return;
 
+    // RÔLE ÉVOLUTIF : retirer anciens rôles AVANT d'ajouter le nouveau
+    const allTigreRoles = Object.values(rolesTigre);
+
+    for (const r of member.roles.cache.values()) {
+        const clean = r.name.replace(/^[^\w]+/, "").trim();
+        if (allTigreRoles.includes(clean)) {
+            await member.roles.remove(r.id).catch(() => {});
+        }
+    }
+
+    // Ajouter le rôle du niveau actuel
     try {
         await member.roles.add(role.id);
     } catch (err) {
         console.error("Erreur attribution rôle :", err);
     }
 
+    // Emoji du niveau
     const emojiName = `CDRICPA_Niveau_${String(niveau).padStart(2, '0')}`;
     const emoji = message.guild.emojis.cache.find(e => e.name === emojiName);
 
@@ -234,44 +227,121 @@ client.on("messageCreate", async (message) => {
         }
     }
 
-    // =========================
-    // EMBED MULTICOLORE NÉON
-    // =========================
+    // DÉBLOCAGE SALON TEXTE NIVEAU 10+
+    if (niveau >= 10) {
+        try {
+            const specialChannel = message.guild.channels.cache.get(SPECIAL_ACTIVE_CHANNEL);
+            if (specialChannel) {
+                await specialChannel.permissionOverwrites.edit(member.id, {
+                    ViewChannel: true,
+                    SendMessages: true,
+                    ReadMessageHistory: true
+                });
 
+                console.log(`Salon spécial (lvl 10+) débloqué pour ${member.user.tag}`);
+            }
+        } catch (err) {
+            console.error("Erreur déblocage salon spécial :", err);
+        }
+    }
+
+    // DÉBLOCAGE SALON VOCAL VIP NIVEAU 30+
+    if (niveau >= 30) {
+        try {
+            const vipVoice = message.guild.channels.cache.get(VIP_VOICE_CHANNEL);
+            if (vipVoice) {
+                await vipVoice.permissionOverwrites.edit(member.id, {
+                    ViewChannel: true,
+                    Connect: true,
+                    Speak: true
+                });
+
+                console.log(`Salon vocal VIP (lvl 30+) débloqué pour ${member.user.tag}`);
+            }
+        } catch (err) {
+            console.error("Erreur déblocage salon vocal VIP :", err);
+        }
+    }
+
+    // EMBED MULTICOLORE NÉON
     try {
         const rewardChannel = message.guild.channels.cache.get(REWARD_CHANNEL);
         if (rewardChannel) {
             await rewardChannel.send({
-    embeds: [{
-        title: "🎖 RÉCOMPENSE DÉBLOQUÉE",
-        description: `
+                embeds: [{
+                    title: "🎖 RÉCOMPENSE DÉBLOQUÉE",
+                    description: `
 💜══════════════════════════════════════════════════════💙
 **${member}** vient de passer au **niveau ${niveau}** !
 
 🎖 **Rôle obtenu :** ${role.name}  
-🔓 **Emoji débloqué :** <:${emoji.name}:${emoji.id}>  
+🔓 **Emoji débloqué :** ${emoji ? `<:${emoji.name}:${emoji.id}>` : "Aucun emoji configuré"}  
 
 🔥 **Puissance du Tigre :** +${niveau * 2}  
 ⚡ **Énergie Cosmique :** Activée  
 🌈 **Cadre Néon Multicolore :** ON
 
+${niveau >= 10 ? "💎 **Salon spécial débloqué :** <#1561093302793805904>" : ""}
+${niveau >= 30 ? "🎧 **Salon vocal VIP débloqué :** <#1561093892806541342>" : ""}
+
 Continue ta progression, guerrier du territoire tigre.
 💚══════════════════════════════════════════════════════💛
-        `,
-        color: 0xFF00FF,
-        thumbnail: {
-            url: emoji ? emoji.url : null
-        },
-        footer: {
-            text: "✨ TigreBot – Énergie cosmique en expansion ✨"
-        }
-    }]
-});
+                    `,
+                    color: 0xFF00FF,
+                    thumbnail: {
+                        url: emoji ? emoji.url : null
+                    },
+                    footer: {
+                        text: "✨ TigreBot – Énergie cosmique en expansion ✨"
+                    }
+                }]
+            });
         }
     } catch (err) {
         console.error("Erreur envoi récompense :", err);
     }
 
-}); // ← ACCOLADE FERMANTE IMPORTANTE
+    // PANTHÉON DES TIGRES
+    try {
+        const pantheonChannel = message.guild.channels.cache.get(PANTHEON_CHANNEL);
+        if (pantheonChannel) {
+
+            const members = await message.guild.members.fetch();
+            let classement = [];
+
+            members.forEach(m => {
+                const tigreRole = m.roles.cache.find(r => {
+                    const clean = r.name.replace(/^[^\w]+/, "").trim();
+                    return allTigreRoles.includes(clean);
+                });
+
+                if (tigreRole) {
+                    const clean = tigreRole.name.replace(/^[^\w]+/, "").trim();
+                    const niv = parseInt(Object.keys(rolesTigre).find(key => rolesTigre[key] === clean));
+                    if (!isNaN(niv)) {
+                        classement.push({ member: m, niveau: niv, roleName: clean });
+                    }
+                }
+            });
+
+            classement.sort((a, b) => b.niveau - a.niveau);
+
+            let texte = `👑 **PANTHÉON DES TIGRES – CLASSEMENT OFFICIEL**\n\n`;
+
+            classement.slice(0, 20).forEach((entry, index) => {
+                const place = index + 1;
+                const medal = place === 1 ? "🥇" : place === 2 ? "🥈" : place === 3 ? "🥉" : "🔥";
+                texte += `${medal} **${entry.roleName}** — <@${entry.member.id}> *(Niveau ${entry.niveau})*\n`;
+            });
+
+            texte += `\n⚡ *Classement mis à jour automatiquement à chaque montée de niveau.*`;
+
+            await pantheonChannel.send(texte);
+        }
+    } catch (err) {
+        console.error("Erreur mise à jour Panthéon :", err);
+    }
+
+});
 
 client.login(process.env.DISCORD_TOKEN);
