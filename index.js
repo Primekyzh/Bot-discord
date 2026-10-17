@@ -9,7 +9,8 @@ const client = new Client({
     ]
 });
 
-client.once('clientReady', () => {
+// ✔️ Event correct pour Discord.js
+client.once('ready', () => {
     console.log(`Bot connecté en tant que ${client.user.tag}`);
 });
 
@@ -116,4 +117,3 @@ Prends le temps de découvrir le Discord et de rejoindre la communauté !
 
 // LOGIN DU BOT
 client.login(process.env.DISCORD_TOKEN);
-
