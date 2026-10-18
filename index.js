@@ -21,7 +21,7 @@ const ALLOWED_LINK = "https://cdricpa.fr/";
 // =========================
 
 client.on('messageCreate', async (message) => {
-    if (message.author.bot) return;
+    if (message.author.bot) return; // IGNORE TOUS LES BOTS
 
     // SALON PIÈGE
     if (message.channel.id === TRAP_CHANNEL_ID) {
@@ -244,6 +244,8 @@ const VIP_VOICE_CHANNEL = "1561093892806541342";     // vocal lvl 30+
 const PANTHEON_CHANNEL = "1561094039359594616";      // panthéon
 
 client.on("messageCreate", async (message) => {
+
+    if (message.author.bot) return; // AJOUTÉ POUR IGNORER LES AUTRES BOTS
 
     if (message.channel.id !== LEVEL_UP_CHANNEL) return;
     if (!message.content.includes("vous venez de passer au niveau")) return;
