@@ -13,7 +13,7 @@ client.once('ready', () => {
     console.log(`Bot connecté en tant que ${client.user.tag}`);
 });
 
-const TRAP_CHANNEL_ID = "1553398885181956177";
+const TRAP_CHANNEL_ID = "1562032389314707487";
 const ALLOWED_LINK = "https://cdricpa.fr/";
 
 // =========================
@@ -79,7 +79,7 @@ client.on('messageCreate', async (message) => {
 
 client.on('guildMemberAdd', async (member) => {
     try {
-        const channel = member.guild.channels.cache.get("1553398596550918243");
+        const channel = member.guild.channels.cache.get("978326024070778940");
         if (!channel) return;
 
         await channel.send({
@@ -105,28 +105,28 @@ tu fais désormais partie de la **famille CSFra** ! ❤️
 
 🧭 📍 **DÉCOUVRE TON NOUVEAU TERRITOIRE**
 
-📅・<#1553398597041787074>  
+📅・<#978680984310538270>  
 ➜ Retrouve les horaires des prochains lives de CDRICPA.
 
-🤖・<#1553398597549293620>  
+🤖・<#978327756297355274>  
 ➜ Trouve des coéquipiers pour partir au combat sur Warzone !
 
-💬・<#1553398597549293619>  
+💬・<#978327703516229722>  
 ➜ Le cœur de la communauté ! Viens discuter, rigoler et faire connaissance.
 
-📸・<#1553398597549293621>  
+📸・<#978327734583427122>  
 ➜ Partage tes photos, tes créations et tes meilleurs moments.
 
-🔫・<#1553398597549293622>  
+🔫・<#1083867615971266562>  
 ➜ Partage tes meilleures classes et découvre celles des autres guerriers !
 
-📺・<#1553398597549293625>  
+📺・<#1169058360813948938>  
 ➜ Retrouve les informations, nouveautés et leaks sur Call of Duty.
 
-🎧・<#1553398598039900272>  
+🎧・<#1326137657990053959>  
 ➜ Partage tes musiques préférées et découvre les sons de la team !
 
-🎥・<#1553398597549293623>  
+🎥・<#978330403708502076>  
 ➜ Montre-nous tes plus beaux kills, tes actions incroyables et tes fails légendaires ! 😂
 
 ━━━━━━━━━━━━━━━━━━━━
@@ -237,11 +237,11 @@ const rolesTigre = {
 // SYSTÈME DE RÉCOMPENSES VIA DRAFTBOT
 // =========================
 
-const LEVEL_UP_CHANNEL = "1553416417376997417";
-const REWARD_CHANNEL = "1553429611197632522";
-const SPECIAL_ACTIVE_CHANNEL = "1561093302793805904"; // texte lvl 10+
-const VIP_VOICE_CHANNEL = "1561093892806541342";     // vocal lvl 30+
-const PANTHEON_CHANNEL = "1561094039359594616";      // panthéon
+const LEVEL_UP_CHANNEL = "1562381652880269363";
+const REWARD_CHANNEL = "1562381652880269363";
+const SPECIAL_ACTIVE_CHANNEL = "1562020467626475541"; // texte lvl 10+
+const VIP_VOICE_CHANNEL = "1562021757836197898";     // vocal lvl 30+
+const PANTHEON_CHANNEL = "1561871939507847250";      // panthéon
 
 client.on("messageCreate", async (message) => {
 
@@ -352,8 +352,8 @@ client.on("messageCreate", async (message) => {
 ⚡ **Énergie Cosmique :** Activée  
 🌈 **Cadre Néon Multicolore :** ON
 
-${niveau >= 10 ? "💎 **Salon spécial débloqué :** <#1561093302793805904>" : ""}
-${niveau >= 30 ? "🎧 **Salon vocal VIP débloqué :** <#1561093892806541342>" : ""}
+${niveau >= 10 ? "💎 **Salon spécial débloqué :** <#1562020467626475541>" : ""}
+${niveau >= 30 ? "🎧 **Salon vocal VIP débloqué :** <#1562021757836197898>" : ""}
 
 Continue ta progression, guerrier du territoire tigre.
 💚══════════════════════════════════════════════════════💛
