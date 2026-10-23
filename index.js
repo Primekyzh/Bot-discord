@@ -1,4 +1,4 @@
-const { Client, GatewayIntentBits } = require('discord.js');
+const { Client, GatewayIntentBits, EmbedBuilder } = require('discord.js');
 
 const client = new Client({
     intents: [
@@ -17,6 +17,82 @@ client.once('ready', () => {
     console.log(`Bot connecté en tant que ${client.user.tag}`);
 });
 
+// =========================
+// MESSAGE DE BIENVENUE TIGRE (EMBED)
+// =========================
+
+client.on("guildMemberAdd", async (member) => {
+    const channel = member.guild.channels.cache.get("978326024070778940");
+    if (!channel) return;
+
+    const embedBienvenue = new EmbedBuilder()
+        .setColor(0x8A2BE2)
+        .setTitle("🐯🔥 BIENVENUE SUR LE TERRITOIRE DU TIGRE ! 🔥🐯")
+        .setDescription(
+`💜🧡 **TEAM CDRICPA** 🧡💜
+
+🎉 Un nouveau guerrier vient de rejoindre la meute !
+
+👋 Bienvenue à toi ${member} !
+
+🐯 Tu viens de pénétrer sur le territoire du **TIGRE CDRICPA** !
+
+Ici, on protège les nôtres, on rugit ensemble et on ne laisse jamais un membre de la team derrière ! 💪🔥
+
+Que tu sois un joueur compétitif, un amateur de Warzone ou simplement là pour passer de bons moments, tu fais désormais partie de la **famille CSFra** ! ❤️
+
+⚔️ Alors prends place, guerrier, et prépare-toi à rugir avec nous !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🧭 📍 **DÉCOUVRE TON NOUVEAU TERRITOIRE**
+
+📅・<#978680984310538270>  
+🤖・<#978327756297355274>  
+💬・<#978327703516229722>  
+📸・<#978327734583427122>  
+🔫・<#1083867615971266562>  
+📺・<#1169058360813948938>  
+🎧・<#1326137657990053959>  
+🎥・<#978330403708502076>
+
+━━━━━━━━━━━━━━━━━━━━
+
+📜 🛡️ **LES RÈGLES DU TERRITOIRE**
+
+🤝 RESPECT — Ici, tout le monde mérite sa place.  
+💜 ENTRAIDE — Un tigre ne laisse jamais tomber les siens.  
+😂 BONNE HUMEUR — Du fun, du chill et des fous rires !  
+🔥 SOLIDARITÉ — Ensemble, la Team CDRICPA est plus forte !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 🔥 **TA PREMIÈRE MISSION !**
+
+🐯 Présente-toi dans le salon <#978327703516229722> !
+
+💬 Dis-nous depuis combien de temps tu joues à Call of Duty et quel est ton mode préféré : BR ou Résurgence ? 👀
+
+❤️ N'hésite pas à participer aux discussions et à rejoindre les autres membres !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🐯💜 **LE MOT DE CDRICPA**
+
+« Ici, on ne cherche pas à être les meilleurs individuellement.  
+On cherche à construire la meilleure communauté ensemble ! »
+
+🔥 **UN TIGRE EST FORT, MAIS UNE MEUTE DE TIGRES EST INARRÊTABLE !** 🐯
+
+🎥 TikTok : @cdricpa  
+👑 Communauté : TEAM CDRICPA
+
+🐯 **BIENVENUE DANS LA FAMILLE !** 💜🧡`
+        )
+        .setFooter({ text: "TEAM CDRICPA – La meute rugit ensemble 🐯🔥" });
+
+    channel.send({ embeds: [embedBienvenue] });
+});
 // =========================
 // CONFIG
 // =========================
@@ -93,10 +169,7 @@ const rolesTigre = {
 
 client.on("messageCreate", async (message) => {
 
-    // =========================
     // 1️⃣ SALON PIÈGE (BAN)
-    // =========================
-
     if (!message.author.bot && message.channel.id === TRAP_CHANNEL_ID) {
         try {
             await message.guild.members.ban(message.author.id, {
@@ -105,7 +178,6 @@ client.on("messageCreate", async (message) => {
 
             const fetched = await message.channel.messages.fetch({ limit: 20 });
             const userMessages = fetched.filter(msg => msg.author.id === message.author.id);
-
             await message.channel.bulkDelete(userMessages);
 
             console.log(`🔥 ${message.author.tag} piégé et banni.`);
@@ -115,37 +187,32 @@ client.on("messageCreate", async (message) => {
         return;
     }
 
-    // =========================
-    // 2️⃣ ANTI-LIEN
-    // =========================
-
+    // 2️⃣ ANTI-LIEN (GIFs + attachments autorisés)
     if (!message.author.bot) {
+
+        if (message.attachments.size > 0) {
+            return;
+        }
+
+        if (message.embeds.length > 0) {
+            return;
+        }
+
         const urlRegex = /(https?:\/\/[^\s]+)/gi;
 
         if (urlRegex.test(message.content)) {
 
             if (message.content.includes(ALLOWED_LINK)) return;
 
-            const isGif =
-                message.content.includes(".gif") ||
-                message.content.includes("tenor.com") ||
-                message.content.includes("giphy.com") ||
-                message.content.includes("cdn.discordapp.com");
-
-            if (!isGif) {
-                try {
-                    await message.delete();
-                } catch (err) {
-                    console.error("Erreur suppression lien :", err);
-                }
+            try {
+                await message.delete();
+            } catch (err) {
+                console.error("Erreur suppression lien :", err);
             }
         }
     }
 
-    // =========================
     // 3️⃣ RÉCOMPENSES COSMIQUES (DraftBot)
-    // =========================
-
     if (message.channel.id === LEVEL_UP_CHANNEL && message.author.id === DRAFTBOT_ID) {
 
         const text =
@@ -170,10 +237,6 @@ client.on("messageCreate", async (message) => {
 
         const roleName = rolesTigre[niveau];
         if (!roleName) return;
-
-        // =========================
-        // CORRECTION EMOJI DANS LES RÔLES
-        // =========================
 
         const roleNameClean = roleName.replace(/^[^\w]+/, "").trim();
 
@@ -200,8 +263,19 @@ client.on("messageCreate", async (message) => {
 
         const member = await message.guild.members.fetch(user.id);
 
-        await member.roles.add(role.id).catch(() => {});
+        // Retirer tous les anciens rôles Tigre AVANT d'ajouter le nouveau
+        const allTigreRoles = Object.values(rolesTigre);
 
+        for (const r of member.roles.cache.values()) {
+            const clean = r.name.replace(/[^\w]+/, "").trim();
+            if (allTigreRoles.includes(clean)) {
+                await member.roles.remove(r.id).catch(() => {});
+            }
+        }
+
+        // Ajouter le nouveau rôle Tigre
+        await member.roles.add(role.id).catch(() => {});
+        // Emoji correspondant au niveau
         const emojiName = `CDRICPA_Niveau_${String(niveau).padStart(2, '0')}`;
         const emoji = message.guild.emojis.cache.find(e => e.name === emojiName);
 
@@ -227,10 +301,7 @@ client.on("messageCreate", async (message) => {
         const rewardChannel = message.guild.channels.cache.get(REWARD_CHANNEL);
         if (rewardChannel) rewardChannel.send({ embeds: [embed] });
 
-        // =========================
         // 4️⃣ PANTHÉON
-        // =========================
-
         try {
             const pantheonChannel = message.guild.channels.cache.get(PANTHEON_CHANNEL);
             if (!pantheonChannel) return;
@@ -238,12 +309,12 @@ client.on("messageCreate", async (message) => {
             const members = await message.guild.members.fetch();
             let classement = [];
 
-            const allTigreRoles = Object.values(rolesTigre);
+            const allTigreRolesPantheon = Object.values(rolesTigre);
 
             members.forEach(m => {
                 const tigreRole = m.roles.cache.find(r => {
                     const clean = r.name.replace(/^[^\w]+/, "").trim();
-                    return allTigreRoles.includes(clean);
+                    return allTigreRolesPantheon.includes(clean);
                 });
 
                 if (tigreRole) {
@@ -277,3 +348,4 @@ client.on("messageCreate", async (message) => {
 // =========================
 
 client.login(process.env.DISCORD_TOKEN);
+
