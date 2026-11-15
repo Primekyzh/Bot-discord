@@ -10,90 +10,6 @@ const client = new Client({
 });
 
 // =========================
-// BOT CONNECTÉ
-// =========================
-
-client.once('ready', () => {
-    console.log(`Bot connecté en tant que ${client.user.tag}`);
-});
-
-// =========================
-// MESSAGE DE BIENVENUE TIGRE (EMBED)
-// =========================
-
-client.on("guildMemberAdd", async (member) => {
-    const channel = member.guild.channels.cache.get("978326024070778940");
-    if (!channel) return;
-
-    const embedBienvenue = new EmbedBuilder()
-        .setColor(0x8A2BE2)
-        .setTitle("🐯🔥 BIENVENUE SUR LE TERRITOIRE DU TIGRE ! 🔥🐯")
-        .setDescription(
-`💜🧡 **TEAM CDRICPA** 🧡💜
-
-🎉 Un nouveau guerrier vient de rejoindre la meute !
-
-👋 Bienvenue à toi ${member} !
-
-🐯 Tu viens de pénétrer sur le territoire du **TIGRE CDRICPA** !
-
-Ici, on protège les nôtres, on rugit ensemble et on ne laisse jamais un membre de la team derrière ! 💪🔥
-
-Que tu sois un joueur compétitif, un amateur de Warzone ou simplement là pour passer de bons moments, tu fais désormais partie de la **famille CSFra** ! ❤️
-
-⚔️ Alors prends place, guerrier, et prépare-toi à rugir avec nous !
-
-━━━━━━━━━━━━━━━━━━━━
-
-🧭 📍 **DÉCOUVRE TON NOUVEAU TERRITOIRE**
-
-📅・<#978680984310538270>  
-🤖・<#978327756297355274>  
-💬・<#978327703516229722>  
-📸・<#978327734583427122>  
-🔫・<#1083867615971266562>  
-📺・<#1169058360813948938>  
-🎧・<#1326137657990053959>  
-🎥・<#978330403708502076>
-
-━━━━━━━━━━━━━━━━━━━━
-
-📜 🛡️ **LES RÈGLES DU TERRITOIRE**
-
-🤝 RESPECT — Ici, tout le monde mérite sa place.  
-💜 ENTRAIDE — Un tigre ne laisse jamais tomber les siens.  
-😂 BONNE HUMEUR — Du fun, du chill et des fous rires !  
-🔥 SOLIDARITÉ — Ensemble, la Team CDRICPA est plus forte !
-
-━━━━━━━━━━━━━━━━━━━━
-
-🎯 🔥 **TA PREMIÈRE MISSION !**
-
-🐯 Présente-toi dans le salon <#978327703516229722> !
-
-💬 Dis-nous depuis combien de temps tu joues à Call of Duty et quel est ton mode préféré : BR ou Résurgence ? 👀
-
-❤️ N'hésite pas à participer aux discussions et à rejoindre les autres membres !
-
-━━━━━━━━━━━━━━━━━━━━
-
-🐯💜 **LE MOT DE CDRICPA**
-
-« Ici, on ne cherche pas à être les meilleurs individuellement.  
-On cherche à construire la meilleure communauté ensemble ! »
-
-🔥 **UN TIGRE EST FORT, MAIS UNE MEUTE DE TIGRES EST INARRÊTABLE !** 🐯
-
-🎥 TikTok : @cdricpa  
-👑 Communauté : TEAM CDRICPA
-
-🐯 **BIENVENUE DANS LA FAMILLE !** 💜🧡`
-        )
-        .setFooter({ text: "TEAM CDRICPA – La meute rugit ensemble 🐯🔥" });
-
-    channel.send({ embeds: [embedBienvenue] });
-});
-// =========================
 // CONFIG
 // =========================
 
@@ -164,30 +80,315 @@ const rolesTigre = {
 };
 
 // =========================
+// PANTHÉON AUTOMATIQUE
+// =========================
+
+let pantheonMessageId = null;
+
+async function updatePantheon(guild) {
+    try {
+
+        const pantheonChannel =
+            guild.channels.cache.get(PANTHEON_CHANNEL);
+
+        if (!pantheonChannel) return;
+
+        const members = await guild.members.fetch();
+
+        let classement = [];
+
+        const allTigreRoles = Object.values(rolesTigre);
+
+        members.forEach(member => {
+
+            const tigreRole = member.roles.cache.find(role => {
+
+                const clean =
+                    role.name.replace(/^[^\w]+/, "").trim();
+
+                return allTigreRoles.includes(clean);
+
+            });
+
+            if (!tigreRole) return;
+
+            const clean =
+                tigreRole.name.replace(/^[^\w]+/, "").trim();
+
+            const niveau = parseInt(
+                Object.keys(rolesTigre)
+                    .find(key => rolesTigre[key] === clean)
+            );
+
+            if (isNaN(niveau)) return;
+
+            classement.push({
+                member,
+                niveau,
+                roleName: tigreRole.name
+            });
+
+        });
+
+        classement.sort(
+            (a, b) => b.niveau - a.niveau
+        );
+
+        let texte =
+`👑 **PANTHÉON DES TIGRES – CLASSEMENT OFFICIEL**
+
+`;
+
+        classement
+            .slice(0, 20)
+            .forEach((entry, index) => {
+
+                const medal =
+                    index === 0 ? "🥇" :
+                    index === 1 ? "🥈" :
+                    index === 2 ? "🥉" :
+                    "🔥";
+
+                texte +=
+`${medal} **${entry.roleName}** — <@${entry.member.id}> *(Niveau ${entry.niveau})*
+`;
+
+            });
+
+        texte += `
+⚡ *Classement mis à jour automatiquement chaque jour.*`;
+
+        if (pantheonMessageId) {
+
+            const oldMsg =
+                await pantheonChannel.messages
+                    .fetch(pantheonMessageId)
+                    .catch(() => null);
+
+            if (oldMsg) {
+                await oldMsg.edit(texte);
+            } else {
+                const newMsg =
+                    await pantheonChannel.send(texte);
+
+                pantheonMessageId =
+                    newMsg.id;
+            }
+
+        } else {
+
+            const messages =
+                await pantheonChannel
+                    .messages.fetch({ limit: 20 });
+
+            const botMessage =
+                messages.find(
+                    m => m.author.id === client.user.id
+                );
+
+            if (botMessage) {
+
+                pantheonMessageId =
+                    botMessage.id;
+
+                await botMessage.edit(texte);
+
+            } else {
+
+                const newMsg =
+                    await pantheonChannel.send(texte);
+
+                pantheonMessageId =
+                    newMsg.id;
+            }
+        }
+
+    } catch (err) {
+
+        console.error(
+            "Erreur mise à jour Panthéon :",
+            err
+        );
+
+    }
+}
+
+// =========================
+// BOT CONNECTÉ
+// =========================
+
+client.once('ready', async () => {
+
+    console.log(
+        `Bot connecté en tant que ${client.user.tag}`
+    );
+
+    const guild =
+        client.guilds.cache.first();
+
+    if (!guild) return;
+
+    await updatePantheon(guild);
+
+    setInterval(async () => {
+
+        await updatePantheon(guild);
+
+    }, 24 * 60 * 60 * 1000);
+
+});
+// =========================
+// MESSAGE DE BIENVENUE TIGRE (EMBED)
+// =========================
+
+client.on("guildMemberAdd", async (member) => {
+
+    const channel =
+        member.guild.channels.cache.get(
+            "978326024070778940"
+        );
+
+    if (!channel) return;
+
+    const embedBienvenue =
+        new EmbedBuilder()
+
+        .setColor(0x8A2BE2)
+
+        .setTitle(
+            "🐯🔥 BIENVENUE SUR LE TERRITOIRE DU TIGRE ! 🔥🐯"
+        )
+
+        .setDescription(
+`💜🧡 **TEAM CDRICPA** 🧡💜
+
+🎉 Un nouveau guerrier vient de rejoindre la meute !
+
+👋 Bienvenue à toi ${member} !
+
+🐯 Tu viens de pénétrer sur le territoire du **TIGRE CDRICPA** !
+
+Ici, on protège les nôtres, on rugit ensemble et on ne laisse jamais un membre de la team derrière ! 💪🔥
+
+Que tu sois un joueur compétitif, un amateur de Warzone ou simplement là pour passer de bons moments, tu fais désormais partie de la **famille CSFra** ! ❤️
+
+⚔️ Alors prends place, guerrier, et prépare-toi à rugir avec nous !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🧭 📍 **DÉCOUVRE TON NOUVEAU TERRITOIRE**
+
+📅・<#978680984310538270>
+🤖・<#978327756297355274>
+💬・<#978327703516229722>
+📸・<#978327734583427122>
+🔫・<#1083867615971266562>
+📺・<#1169058360813948938>
+🎧・<#1326137657990053959>
+🎥・<#978330403708502076>
+
+━━━━━━━━━━━━━━━━━━━━
+
+📜 🛡️ **LES RÈGLES DU TERRITOIRE**
+
+🤝 RESPECT — Ici, tout le monde mérite sa place.
+💜 ENTRAIDE — Un tigre ne laisse jamais tomber les siens.
+😂 BONNE HUMEUR — Du fun, du chill et des fous rires !
+🔥 SOLIDARITÉ — Ensemble, la Team CDRICPA est plus forte !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🎯 🔥 **TA PREMIÈRE MISSION !**
+
+🐯 Présente-toi dans le salon <#978327703516229722> !
+
+💬 Dis-nous depuis combien de temps tu joues à Call of Duty et quel est ton mode préféré : BR ou Résurgence ? 👀
+
+❤️ N'hésite pas à participer aux discussions et à rejoindre les autres membres !
+
+━━━━━━━━━━━━━━━━━━━━
+
+🐯💜 **LE MOT DE CDRICPA**
+
+« Ici, on ne cherche pas à être les meilleurs individuellement.
+On cherche à construire la meilleure communauté ensemble ! »
+
+🔥 **UN TIGRE EST FORT, MAIS UNE MEUTE DE TIGRES EST INARRÊTABLE !** 🐯
+
+🎥 TikTok : @cdricpa
+👑 Communauté : TEAM CDRICPA
+
+🐯 **BIENVENUE DANS LA FAMILLE !** 💜🧡`
+        )
+
+        .setFooter({
+            text:
+            "TEAM CDRICPA – La meute rugit ensemble 🐯🔥"
+        });
+
+    channel.send({
+        embeds: [embedBienvenue]
+    });
+
+});
+// =========================
 // MESSAGE CREATE FUSIONNÉ
 // =========================
 
 client.on("messageCreate", async (message) => {
 
     // 1️⃣ SALON PIÈGE (BAN)
-    if (!message.author.bot && message.channel.id === TRAP_CHANNEL_ID) {
+
+    if (
+        !message.author.bot &&
+        message.channel.id === TRAP_CHANNEL_ID
+    ) {
+
         try {
-            await message.guild.members.ban(message.author.id, {
-                reason: "Salon piège : activité suspecte"
-            });
 
-            const fetched = await message.channel.messages.fetch({ limit: 20 });
-            const userMessages = fetched.filter(msg => msg.author.id === message.author.id);
-            await message.channel.bulkDelete(userMessages);
+            await message.guild.members.ban(
+                message.author.id,
+                {
+                    reason:
+                    "Salon piège : activité suspecte"
+                }
+            );
 
-            console.log(`🔥 ${message.author.tag} piégé et banni.`);
+            const fetched =
+                await message.channel.messages.fetch({
+                    limit: 20
+                });
+
+            const userMessages =
+                fetched.filter(
+                    msg =>
+                    msg.author.id === message.author.id
+                );
+
+            await message.channel.bulkDelete(
+                userMessages,
+                true
+            );
+
+            console.log(
+                `🔥 ${message.author.tag} piégé et banni.`
+            );
+
         } catch (err) {
-            console.error("Erreur salon piège :", err);
+
+            console.error(
+                "Erreur salon piège :",
+                err
+            );
+
         }
+
         return;
     }
 
-    // 2️⃣ ANTI-LIEN (GIFs + attachments autorisés)
+    // 2️⃣ ANTI-LIEN
+    // GIFs, images et fichiers autorisés
+
     if (!message.author.bot) {
 
         if (message.attachments.size > 0) {
@@ -198,154 +399,357 @@ client.on("messageCreate", async (message) => {
             return;
         }
 
-        const urlRegex = /(https?:\/\/[^\s]+)/gi;
+        const urlRegex =
+            /(https?:\/\/[^\s]+)/gi;
 
         if (urlRegex.test(message.content)) {
 
-            if (message.content.includes(ALLOWED_LINK)) return;
+            if (
+                message.content.includes(
+                    ALLOWED_LINK
+                )
+            ) {
+                return;
+            }
 
             try {
+
                 await message.delete();
+
             } catch (err) {
-                console.error("Erreur suppression lien :", err);
+
+                console.error(
+                    "Erreur suppression lien :",
+                    err
+                );
+
             }
+
         }
     }
 
     // 3️⃣ RÉCOMPENSES COSMIQUES (DraftBot)
-    if (message.channel.id === LEVEL_UP_CHANNEL && message.author.id === DRAFTBOT_ID) {
 
-        const text =
+    if (
+        message.channel.id === LEVEL_UP_CHANNEL &&
+        message.author.id === DRAFTBOT_ID
+    ) {
+ const text =
             message.content ||
             message.embeds[0]?.description ||
             message.embeds[0]?.title ||
             "";
 
-        console.log("Texte DraftBot détecté:", text);
+        console.log(
+            "Texte DraftBot détecté:",
+            text
+        );
 
-        if (!text.toLowerCase().includes("vous venez de passer au niveau")) return;
-
-        let match = text.match(/niveau\s+(\d+)/i);
-        if (!match) {
-            const cleaned = text.replace(/[^\d]/g, "");
-            if (cleaned) match = [null, cleaned];
+        if (
+            !text
+                .toLowerCase()
+                .includes(
+                    "vous venez de passer au niveau"
+                )
+        ) {
+            return;
         }
+
+        let match =
+            text.match(
+                /niveau\s+(\d+)/i
+            );
+
+        if (!match) {
+
+            const cleaned =
+                text.replace(
+                    /[^\d]/g,
+                    ""
+                );
+
+            if (cleaned) {
+                match = [null, cleaned];
+            }
+
+        }
+
         if (!match) return;
 
-        const niveau = parseInt(match[1]);
-        console.log("Niveau détecté:", niveau);
+        const niveau =
+            parseInt(match[1]);
 
-        const roleName = rolesTigre[niveau];
+        console.log(
+            "Niveau détecté:",
+            niveau
+        );
+
+        const roleName =
+            rolesTigre[niveau];
+
         if (!roleName) return;
 
-        const roleNameClean = roleName.replace(/^[^\w]+/, "").trim();
+        const roleNameClean =
+            roleName
+                .replace(
+                    /^[^\w]+/,
+                    ""
+                )
+                .trim();
 
-        const role = message.guild.roles.cache.find(r => {
-            const clean = r.name.replace(/^[^\w]+/, "").trim();
-            return clean === roleNameClean;
-        });
+        const role =
+            message.guild.roles.cache.find(
+                r => {
 
-        console.log("Role recherché:", roleNameClean);
-        console.log("Role trouvé:", role ? role.name : "AUCUN");
+                    const clean =
+                        r.name
+                            .replace(
+                                /^[^\w]+/,
+                                ""
+                            )
+                            .trim();
+
+                    return (
+                        clean ===
+                        roleNameClean
+                    );
+
+                }
+            );
+
+        console.log(
+            "Role recherché:",
+            roleNameClean
+        );
+
+        console.log(
+            "Role trouvé:",
+            role
+                ? role.name
+                : "AUCUN"
+        );
 
         if (!role) return;
 
-        let user = message.mentions.users.first();
+        let user =
+            message.mentions.users.first();
+
         if (!user) {
-            const idMatch = text.match(/<@!?(\d+)>/);
+
+            const idMatch =
+                text.match(
+                    /<@!?(\d+)>/
+                );
+
             if (idMatch) {
-                user = await message.guild.members.fetch(idMatch[1]).then(m => m.user).catch(() => null);
+
+                user =
+                    await message.guild.members
+                        .fetch(idMatch[1])
+                        .then(
+                            m => m.user
+                        )
+                        .catch(
+                            () => null
+                        );
+
             }
+
         }
+
         if (!user) return;
 
-        console.log("User détecté:", user.tag);
+        console.log(
+            "User détecté:",
+            user.tag
+        );
 
-        const member = await message.guild.members.fetch(user.id);
+        const member =
+            await message.guild.members.fetch(
+                user.id
+            );
 
-        // Retirer tous les anciens rôles Tigre AVANT d'ajouter le nouveau
-        const allTigreRoles = Object.values(rolesTigre);
+        // Supprimer les anciens rôles Tigre
 
-        for (const r of member.roles.cache.values()) {
-            const clean = r.name.replace(/[^\w]+/, "").trim();
-            if (allTigreRoles.includes(clean)) {
-                await member.roles.remove(r.id).catch(() => {});
+        const allTigreRoles =
+            Object.values(
+                rolesTigre
+            );
+
+        for (
+            const r of
+            member.roles.cache.values()
+        ) {
+
+            const clean =
+                r.name
+                    .replace(
+                        /^[^\w]+/,
+                        ""
+                    )
+                    .trim();
+
+            if (
+                allTigreRoles.includes(
+                    clean
+                )
+            ) {
+
+                await member.roles
+                    .remove(r.id)
+                    .catch(
+                        () => {}
+                    );
+
             }
+
         }
 
-        // Ajouter le nouveau rôle Tigre
-        await member.roles.add(role.id).catch(() => {});
-        // Emoji correspondant au niveau
-        const emojiName = `CDRICPA_Niveau_${String(niveau).padStart(2, '0')}`;
-        const emoji = message.guild.emojis.cache.find(e => e.name === emojiName);
+        // Ajouter nouveau rôle
 
-        const emojiDisplay = emoji ? `<${emoji.animated ? 'a' : ''}:${emoji.name}:${emoji.id}>` : "🔥";
-        const imageUrl = emoji ? `https://cdn.discordapp.com/emojis/${emoji.id}.png` : null;
+        await member.roles
+            .add(role.id)
+            .catch(
+                () => {}
+            );
+
+        // Emoji niveau
+
+        const emojiName =
+            `CDRICPA_Niveau_${String(
+                niveau
+            ).padStart(
+                2,
+                "0"
+            )}`;
+
+        const emoji =
+            message.guild.emojis.cache.find(
+                e =>
+                    e.name ===
+                    emojiName
+            );
+
+        const emojiDisplay =
+            emoji
+                ? `<${emoji.animated ? "a" : ""}:${emoji.name}:${emoji.id}>`
+                : "🔥";
+
+        const imageUrl =
+            emoji
+                ? `https://cdn.discordapp.com/emojis/${emoji.id}.png`
+                : null;
 
         const embed = {
-            title: "🏅 RÉCOMPENSE DÉBLOQUÉE",
-            color: 0x8A2BE2,
-            thumbnail: imageUrl ? { url: imageUrl } : null,
-            description: `💜\n────────────────────────────── 💙\n\n${member} vient de passer au **niveau ${niveau}** !\n\n`,
+
+            title:
+                "🏅 RÉCOMPENSE DÉBLOQUÉE",
+
+            color:
+                0x8A2BE2,
+
+            thumbnail:
+                imageUrl
+                    ? {
+                        url:
+                            imageUrl
+                    }
+                    : null,
+
+            description:
+`💜
+────────────────────────────── 💙
+
+${member} vient de passer au **niveau ${niveau}** !
+
+`,
+
             fields: [
-                { name: "🎖 Rôle obtenu :", value: `🐯 ${roleName}` },
-                { name: "🎨 Emoji débloqué :", value: `${emojiDisplay}` },
-                { name: "⚡ Puissance du Tigre :", value: `+${niveau * 2}`, inline: true },
-                { name: "🌌 Énergie Cosmique :", value: "Activée", inline: true },
-                { name: "🌈 Cadre Néon Multicolore :", value: "ON", inline: true },
-                { name: "💬 Salon spécial débloqué :", value: `<#${SPECIAL_ACTIVE_CHANNEL}>` }
+
+                {
+                    name:
+                    "🎖 Rôle obtenu :",
+
+                    value:
+                    `🐯 ${roleName}`
+                },
+
+                {
+                    name:
+                    "🎨 Emoji débloqué :",
+
+                    value:
+                    emojiDisplay
+                },
+
+                {
+                    name:
+                    "⚡ Puissance du Tigre :",
+
+                    value:
+                    `+${niveau * 2}`,
+
+                    inline:
+                    true
+                },
+
+                {
+                    name:
+                    "🌌 Énergie Cosmique :",
+
+                    value:
+                    "Activée",
+
+                    inline:
+                    true
+                },
+
+                {
+                    name:
+                    "🌈 Cadre Néon Multicolore :",
+
+                    value:
+                    "ON",
+
+                    inline:
+                    true
+                },
+
+                {
+                    name:
+                    "💬 Salon spécial débloqué :",
+
+                    value:
+                    `<#${SPECIAL_ACTIVE_CHANNEL}>`
+                }
+
             ],
-            footer: { text: "🐯 TigreBot – Énergie cosmique en expansion ✨" }
+
+            footer: {
+                text:
+                "🐯 TigreBot – Énergie cosmique en expansion ✨"
+            }
+
         };
 
-        const rewardChannel = message.guild.channels.cache.get(REWARD_CHANNEL);
-        if (rewardChannel) rewardChannel.send({ embeds: [embed] });
+        const rewardChannel =
+            message.guild.channels.cache.get(
+                REWARD_CHANNEL
+            );
 
-        // 4️⃣ PANTHÉON
-        try {
-            const pantheonChannel = message.guild.channels.cache.get(PANTHEON_CHANNEL);
-            if (!pantheonChannel) return;
+        if (rewardChannel) {
 
-            const members = await message.guild.members.fetch();
-            let classement = [];
-
-            const allTigreRolesPantheon = Object.values(rolesTigre);
-
-            members.forEach(m => {
-                const tigreRole = m.roles.cache.find(r => {
-                    const clean = r.name.replace(/^[^\w]+/, "").trim();
-                    return allTigreRolesPantheon.includes(clean);
-                });
-
-                if (tigreRole) {
-                    const clean = tigreRole.name.replace(/^[^\w]+/, "").trim();
-                    const niv = parseInt(Object.keys(rolesTigre).find(key => rolesTigre[key] === clean));
-                    if (!isNaN(niv)) {
-                        classement.push({ member: m, niveau: niv, roleName: tigreRole.name });
-                    }
-                }
+            rewardChannel.send({
+                embeds: [embed]
             });
 
-            classement.sort((a, b) => b.niveau - a.niveau);
-
-            let texte = `👑 **PANTHÉON DES TIGRES – CLASSEMENT OFFICIEL**\n\n`;
-            classement.slice(0, 20).forEach((entry, index) => {
-                const medal = index === 0 ? "🥇" : index === 1 ? "🥈" : index === 2 ? "🥉" : "🔥";
-                texte += `${medal} **${entry.roleName}** — <@${entry.member.id}> *(Niveau ${entry.niveau})*\n`;
-            });
-            texte += `\n⚡ *Classement mis à jour automatiquement.*`;
-
-            pantheonChannel.send(texte);
-
-        } catch (err) {
-            console.error("Erreur panthéon :", err);
         }
-    }
-});
 
+    }
+
+});
 // =========================
 // TOKEN
 // =========================
 
-client.login(process.env.DISCORD_TOKEN);
-
+client.login(process.env.TOKEN);
